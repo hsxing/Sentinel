@@ -241,6 +241,7 @@ public class ArrayMetric implements Metric {
 
     @Override
     public void addPass(int count) {
+        // 获取当前时间对应的窗口，返回的是当前窗口的一个包装类
         WindowWrap<MetricBucket> wrap = data.currentWindow();
         wrap.value().addPass(count);
     }

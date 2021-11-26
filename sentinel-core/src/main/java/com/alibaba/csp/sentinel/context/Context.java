@@ -24,6 +24,8 @@ import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
 
 /**
+ * 显式使用ContextUtil.entry("contextName")
+ * 使用SphU.entry("resource")创建Entry的时候如果没有context则创建一个
  * This class holds metadata of current invocation:<br/>
  *
  * <ul>
@@ -57,21 +59,25 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
 public class Context {
 
     /**
+     * 上下文名称
      * Context name.
      */
     private final String name;
 
     /**
+     * 当前调用链的入口节点
      * The entrance node of current invocation tree.
      */
     private DefaultNode entranceNode;
 
     /**
+     * 当前调用链此刻的是哪一个Entry对象在执行
      * Current processing entry.
      */
     private Entry curEntry;
 
     /**
+     * 调用来源信息
      * The origin of this context (usually indicate different invokers, e.g. service consumer name or origin IP).
      */
     private String origin = "";
@@ -108,10 +114,19 @@ public class Context {
         return name;
     }
 
+    /**
+     * 获取当前节点
+     * @return
+     */
     public Node getCurNode() {
         return curEntry == null ? null : curEntry.getCurNode();
     }
 
+    /**
+     * 设置当前节点
+     * @param node
+     * @return
+     */
     public Context setCurNode(Node node) {
         this.curEntry.setCurNode(node);
         return this;

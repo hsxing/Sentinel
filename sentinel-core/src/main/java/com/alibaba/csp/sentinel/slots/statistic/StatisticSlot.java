@@ -56,9 +56,11 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
                       boolean prioritized, Object... args) throws Throwable {
         try {
             // Do some checking.
+            // 先执行后续限流、降级等功能
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 
             // Request passed, add thread count and pass count.
+            // 上面执行通过，更新通过请求数据
             node.increaseThreadNum();
             node.addPassRequest(count);
 

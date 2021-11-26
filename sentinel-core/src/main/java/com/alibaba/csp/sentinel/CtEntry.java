@@ -33,11 +33,13 @@ import com.alibaba.csp.sentinel.util.function.BiConsumer;
  * @author Eric Zhao
  */
 class CtEntry extends Entry {
-
+    //当前Entry的父Entry
     protected Entry parent = null;
+    //当前Entry的子Entry
     protected Entry child = null;
-
+    //当前的调用链
     protected ProcessorSlot<Object> chain;
+    //当前的Context
     protected Context context;
     protected LinkedList<BiConsumer<Context, Entry>> exitHandlers;
 
@@ -54,10 +56,12 @@ class CtEntry extends Entry {
         if (context instanceof NullContext) {
             return;
         }
+        //产生entry链
         this.parent = context.getCurEntry();
         if (parent != null) {
             ((CtEntry) parent).child = this;
         }
+        //更新context的当curEntry
         context.setCurEntry(this);
     }
 
@@ -82,7 +86,13 @@ class CtEntry extends Entry {
             exitHandlers = null;
         }
     }
-
+    /**
+     * 退出
+     * @param context
+     * @param count
+     * @param args
+     * @throws ErrorEntryFreeException
+     */
     protected void exitForContext(Context context, int count, Object... args) throws ErrorEntryFreeException {
         if (context != null) {
             // Null context should exit without clean-up.
@@ -91,10 +101,13 @@ class CtEntry extends Entry {
             }
 
             if (context.getCurEntry() != this) {
+                //如果退出的不是当前的entry对象的场景
+                //获取当前entry对应的资源名
                 String curEntryNameInContext = context.getCurEntry() == null ? null
                     : context.getCurEntry().getResourceWrapper().getName();
                 // Clean previous call stack.
                 CtEntry e = (CtEntry) context.getCurEntry();
+                //从Context的curEntry开始退出，并抛出异常，退出的时候应该从curEntry开始
                 while (e != null) {
                     e.exit(count, args);
                     e = (CtEntry) e.parent;
@@ -105,6 +118,7 @@ class CtEntry extends Entry {
                 throw new ErrorEntryFreeException(errorMessage);
             } else {
                 // Go through the onExit hook of all slots.
+                //退出所有的slot
                 if (chain != null) {
                     chain.exit(context, resourceWrapper, count, args);
                 }
@@ -112,11 +126,13 @@ class CtEntry extends Entry {
                 callExitHandlersAndCleanUp(context);
 
                 // Restore the call stack.
+                //将Context的curEntry设置为parent，并将parent的child设置为null
                 context.setCurEntry(parent);
                 if (parent != null) {
                     ((CtEntry) parent).child = null;
                 }
                 if (parent == null) {
+                    //如果是默认的上下文，退出
                     // Default context (auto entered) will be exited automatically.
                     if (ContextUtil.isDefaultContext(context)) {
                         ContextUtil.exit();

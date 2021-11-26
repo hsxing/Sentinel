@@ -69,9 +69,10 @@ public class FlowRuleChecker {
         }
 
         if (rule.isClusterMode()) {
+            // 判断是否开启集群限流
             return passClusterCheck(rule, context, node, acquireCount, prioritized);
         }
-
+        // 若未开启直接进行本地限流
         return passLocalCheck(rule, context, node, acquireCount, prioritized);
     }
 
@@ -149,9 +150,11 @@ public class FlowRuleChecker {
         try {
             TokenService clusterService = pickClusterService();
             if (clusterService == null) {
+                // 若未获取到clusterService降级为本地限流
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             }
             long flowId = rule.getClusterConfig().getFlowId();
+            // 向TokenServer发送请求
             TokenResult result = clusterService.requestToken(flowId, acquireCount, prioritized);
             return applyTokenResult(result, rule, context, node, acquireCount, prioritized);
             // If client is absent, then fallback to local mode.
@@ -160,6 +163,7 @@ public class FlowRuleChecker {
         }
         // Fallback to local flow control when token client or server for this rule is not available.
         // If fallback is not enabled, then directly pass.
+        // 降级为本地限流
         return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
     }
 

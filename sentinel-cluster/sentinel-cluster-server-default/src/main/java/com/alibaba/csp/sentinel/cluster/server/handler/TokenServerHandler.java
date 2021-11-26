@@ -70,6 +70,7 @@ public class TokenServerHandler extends ChannelInboundHandlerAdapter {
             }
 
             // Pick request processor for request type.
+            // 根据请求类型选取相应的processor
             RequestProcessor<?, ?> processor = RequestProcessorProvider.getProcessor(request.getType());
             if (processor == null) {
                 RecordLog.warn("[TokenServerHandler] No processor for request type: " + request.getType());

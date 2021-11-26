@@ -54,7 +54,7 @@ final class ClusterFlowChecker {
 
     static TokenResult acquireClusterToken(/*@Valid*/ FlowRule rule, int acquireCount, boolean prioritized) {
         Long id = rule.getClusterConfig().getFlowId();
-
+        // 首先判断是否仍有余量
         if (!allowProceed(id)) {
             return new TokenResult(TokenResultStatus.TOO_MANY_REQUEST);
         }
@@ -67,8 +67,9 @@ final class ClusterFlowChecker {
         double latestQps = metric.getAvg(ClusterFlowEvent.PASS);
         double globalThreshold = calcGlobalThreshold(rule) * ClusterServerConfigManager.getExceedCount();
         double nextRemaining = globalThreshold - latestQps - acquireCount;
-
+        // 请求acquireCount后是否超过globalThreshold阈值
         if (nextRemaining >= 0) {
+            //若有余量则请求通过
             // TODO: checking logic and metric operation should be separated.
             metric.add(ClusterFlowEvent.PASS, acquireCount);
             metric.add(ClusterFlowEvent.PASS_REQUEST, 1);
@@ -81,6 +82,7 @@ final class ClusterFlowChecker {
                 .setRemaining((int) nextRemaining)
                 .setWaitInMs(0);
         } else {
+            // 若无余量
             if (prioritized) {
                 // Try to occupy incoming buckets.
                 double occupyAvg = metric.getAvg(ClusterFlowEvent.WAITING);

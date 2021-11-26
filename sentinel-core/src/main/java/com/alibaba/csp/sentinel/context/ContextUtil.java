@@ -45,11 +45,13 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
 public class ContextUtil {
 
     /**
+     * 线程中保存上下文的ThreadLocal
      * Store the context in ThreadLocal for easy access.
      */
     private static ThreadLocal<Context> contextHolder = new ThreadLocal<>();
 
     /**
+     * 持有所有的EntranceNode，每一个EntranceNode和一个名称不同的上下文关联
      * Holds all {@link EntranceNode}. Each {@link EntranceNode} is associated with a distinct context name.
      */
     private static volatile Map<String, DefaultNode> contextNameNodeMap = new HashMap<>();
@@ -116,13 +118,23 @@ public class ContextUtil {
         }
         return trueEnter(name, origin);
     }
-
+    /**
+     * 创建一个context
+     * @param name 资源名称
+     * @param origin 请求来源
+     * @return
+     */
     protected static Context trueEnter(String name, String origin) {
+        //先从本地线程中获取
         Context context = contextHolder.get();
+        //本地线程中没有
         if (context == null) {
+            //查看缓存中是否存在EntranceNode类型的调用链入口节点
             Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap;
             DefaultNode node = localCacheNameMap.get(name);
+            //context，node都不存在
             if (node == null) {
+                // 检查localCacheNameMap size是否小于MAX_CONTEXT_NAME_SIZE（2000）
                 if (localCacheNameMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                     setNullContext();
                     return NULL_CONTEXT;
@@ -131,10 +143,13 @@ public class ContextUtil {
                     try {
                         node = contextNameNodeMap.get(name);
                         if (node == null) {
+                            //双检
+                            // 检查localCacheNameMap size是否小于MAX_CONTEXT_NAME_SIZE（2000）
                             if (contextNameNodeMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                                 setNullContext();
                                 return NULL_CONTEXT;
                             } else {
+                                //创建EntranceNode，并更新contextNameNodeMap
                                 node = new EntranceNode(new StringResourceWrapper(name, EntryType.IN), null);
                                 // Add entrance node.
                                 Constants.ROOT.addChild(node);
@@ -150,6 +165,8 @@ public class ContextUtil {
                     }
                 }
             }
+            //context存在，node不存在
+            //将EntranceNode和origin赋值给context，创建上下文
             context = new Context(node, name);
             context.setOrigin(origin);
             contextHolder.set(context);

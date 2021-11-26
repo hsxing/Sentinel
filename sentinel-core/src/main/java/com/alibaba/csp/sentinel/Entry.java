@@ -54,12 +54,13 @@ import com.alibaba.csp.sentinel.context.Context;
 public abstract class Entry implements AutoCloseable {
 
     private static final Object[] OBJECTS0 = new Object[0];
-
+    //创建该Entry的时间戳。
     private final long createTimestamp;
     private long completeTimestamp;
-
+    //Entry当前所在节点
     private Node curNode;
     /**
+     * Entry的调用源信息节点
      * {@link Node} of the specific origin, Usually the origin is the Service Consumer.
      */
     private Node originNode;

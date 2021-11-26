@@ -117,32 +117,35 @@ public class CtSph implements Sph {
     private Entry entryWithPriority(ResourceWrapper resourceWrapper, int count, boolean prioritized, Object... args)
         throws BlockException {
         Context context = ContextUtil.getContext();
+        //如果是NullContext，则返回一个没有chain的entry对象，意味着不需要进行slot的检查
         if (context instanceof NullContext) {
             // The {@link NullContext} indicates that the amount of context has exceeded the threshold,
             // so here init the entry only. No rule checking will be done.
             return new CtEntry(resourceWrapper, null, context);
         }
-
+        //如果不存在context，创建一个默认的context
         if (context == null) {
             // Using default context.
             context = InternalContextUtil.internalEnter(Constants.CONTEXT_DEFAULT_NAME);
         }
 
         // Global switch is close, no rule checking will do.
+        //若全局开关关闭，不去检查规则
         if (!Constants.ON) {
             return new CtEntry(resourceWrapper, null, context);
         }
-
+        //获取插槽处理链
         ProcessorSlot<Object> chain = lookProcessChain(resourceWrapper);
 
         /*
          * Means amount of resources (slot chain) exceeds {@link Constants.MAX_SLOT_CHAIN_SIZE},
          * so no rule checking will be done.
          */
+        //如果不存在插槽处理链，则创建一个没有chain的entry对象，意味着不需要进行slot的检查
         if (chain == null) {
             return new CtEntry(resourceWrapper, null, context);
         }
-
+        //创建一个entry
         Entry e = new CtEntry(resourceWrapper, chain, context);
         try {
             chain.entry(context, resourceWrapper, null, count, prioritized, args);

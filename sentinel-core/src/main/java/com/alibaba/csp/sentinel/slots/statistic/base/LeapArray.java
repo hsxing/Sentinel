@@ -131,6 +131,7 @@ public abstract class LeapArray<T> {
          */
         while (true) {
             WindowWrap<T> old = array.get(idx);
+            // 第一次进入，新建窗口，并使用cas的方式设置，如果出现争抢导致设置失败，暂时让出执行权待其它线程成功设置
             if (old == null) {
                 /*
                  *     B0       B1      B2    NULL      B4
@@ -153,6 +154,7 @@ public abstract class LeapArray<T> {
                     Thread.yield();
                 }
             } else if (windowStart == old.windowStart()) {
+                // 当前时间对应的窗口开始时间等于获取到的窗口开始时间，那么当前获取到的窗口就是我们需要的
                 /*
                  *     B0       B1      B2     B3      B4
                  * ||_______|_______|_______|_______|_______||___
@@ -166,6 +168,7 @@ public abstract class LeapArray<T> {
                  */
                 return old;
             } else if (windowStart > old.windowStart()) {
+                // 当前时间对应的窗口开始时间大于获取到的窗口开始时间，那么当前获取到的窗口为已过期窗口，加锁重置
                 /*
                  *   (old)
                  *             B0       B1      B2    NULL      B4
