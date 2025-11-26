@@ -35,6 +35,8 @@ public class Env {
         // If init fails, the process will exit.
         // test pr
         InitExecutor.doInit();
+        InitExecutor.doInit();
+        
     }
 
 }
