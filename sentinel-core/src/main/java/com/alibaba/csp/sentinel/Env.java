@@ -33,7 +33,10 @@ public class Env {
 
     static {
         // If init fails, the process will exit.
+        // test pr
         InitExecutor.doInit();
+        InitExecutor.doInit();
+        
     }
 
 }
